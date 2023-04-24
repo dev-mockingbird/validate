@@ -25,8 +25,9 @@ func validate(data any, prev string, logger logf.Logfer, rules Rules) error {
 	return validateReflectValue(val, prev, logger, rules)
 }
 
-func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) Rule {
-	rule, ok := rules[name]
+func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule Rule) {
+	var ok bool
+	rule, ok = rules[name]
 	defer func() {
 		if rawrule != "" {
 			ParseValidateTag(rawrule, &rule, logger)
@@ -67,6 +68,9 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 	case reflect.Struct:
 		for i := 0; i < val.NumField(); i++ {
 			f := val.Type().Field(i)
+			if !f.IsExported() {
+				continue
+			}
 			fn := fmt.Sprintf("%s.%s", prev, f.Name)
 			var rawrule string
 			if tag := f.Tag.Get("validate"); tag != "" {

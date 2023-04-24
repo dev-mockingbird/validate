@@ -34,6 +34,11 @@ type NestedCase struct {
 	}
 }
 
+type UnexportedCase struct {
+	unexported bool
+	Str        string `validate:"omitempty"`
+}
+
 func TestValidate_simple(t *testing.T) {
 	r := SimpleValidateCase{}
 	if err := GetValidator().Validate(r); err != nil {
@@ -261,6 +266,16 @@ func TestValidate_rules(t *testing.T) {
 			A: struct{ AA string }{AA: "a"},
 			B: &struct{ BB *int }{},
 		},
+	}
+	if err := validator.Validate(r); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestValidate_unexported(t *testing.T) {
+	validator := GetValidator()
+	r := map[string]UnexportedCase{
+		"hello": {},
 	}
 	if err := validator.Validate(r); err != nil {
 		t.Fatal(err)
