@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -9,6 +10,10 @@ import (
 	"github.com/dev-mockingbird/logf"
 	"github.com/spf13/cast"
 	"github.com/thoas/go-funk"
+)
+
+const (
+	InvalidData = "invalid-data"
 )
 
 type Rule struct {
@@ -25,7 +30,7 @@ type Rules map[string]Rule
 func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules Rules) (empty bool, err error) {
 	errOccurred := func() bool {
 		if !r.Omitempty && empty {
-			err = errors.Noticef("`%s` not allow empty", prev)
+			err = errors.Tag(fmt.Errorf("`%s` not allow empty", prev), InvalidData)
 			return true
 		}
 		return false
@@ -57,12 +62,12 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 				return
 			}
 			if !re.MatchString(sval) {
-				err = errors.Noticef("`%s` cound be malformed", prev)
+				err = errors.Tag(fmt.Errorf("`%s` cound be malformed", prev), InvalidData)
 			}
 		}
 		if len(r.Enum) > 0 {
 			if !funk.ContainsString(r.Enum, sval) {
-				err = errors.Noticef("`%s` should be one of [%s], current value is [%s]", prev, strings.Join(r.Enum, ","), sval)
+				err = errors.Tag(fmt.Errorf("`%s` should be one of [%s], current value is [%s]", prev, strings.Join(r.Enum, ","), sval), InvalidData)
 			}
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -76,14 +81,14 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 				}
 				return ret
 			}(), ival) {
-				err = errors.Noticef("`%s` should be one of [%s], current value is [%d]", prev, strings.Join(r.Enum, ","), ival)
+				err = errors.Tag(fmt.Errorf("`%s` should be one of [%s], current value is [%d]", prev, strings.Join(r.Enum, ","), ival), InvalidData)
 			}
 		}
 		if r.Min != nil && ival < *r.Min {
-			err = errors.Noticef("`%s` should be great than equal [%d], current value is [%d]", prev, *r.Min, ival)
+			err = errors.Tag(fmt.Errorf("`%s` should be greater than equal [%d], current value is [%d]", prev, *r.Min, ival), InvalidData)
 		}
 		if r.Max != nil && ival > *r.Max {
-			err = errors.Noticef("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival)
+			err = errors.Tag(fmt.Errorf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
 		}
 	case reflect.Struct:
 		err = validateReflectValue(val, prev, logger, rules)

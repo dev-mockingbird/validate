@@ -11,13 +11,13 @@ import (
 )
 
 type Validator interface {
-	Validate(data any) error
+	Validate(data any, rules ...Raw) error
 }
 
-type Validate func(data any) error
+type Validate func(data any, rules ...Raw) error
 
-func (v Validate) Validate(data any) error {
-	return v(data)
+func (v Validate) Validate(data any, rules ...Raw) error {
+	return v(data, rules...)
 }
 
 func validate(data any, prev string, logger logf.Logfer, rules Rules) error {
@@ -111,7 +111,7 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 			}
 		}
 		if !found {
-			return errors.Noticef("at least one of [%s] should be valued", strings.Join(fields, ","))
+			return errors.Tag(fmt.Errorf("at least one of [%s] should be valued", strings.Join(fields, ",")), InvalidData)
 		}
 	}
 	return nil
@@ -146,21 +146,28 @@ func RR(rr Raw) Option {
 }
 
 func GetValidator(opt ...Option) Validator {
-	return Validate(func(data any) error {
-		var opts validateOptions
-		for _, apply := range opt {
-			apply(&opts)
-		}
-		if opts.logger == nil {
-			opts.logger = logf.New()
-		}
-		if opts.rules == nil {
-			opts.rules = make(Rules)
-		}
-		for n, r := range opts.rawRule {
-			var ru Rule
-			ParseValidateTag(r, &ru, opts.logger)
-			opts.rules[n] = ru
+	var opts validateOptions
+	for _, apply := range opt {
+		apply(&opts)
+	}
+	if opts.logger == nil {
+		opts.logger = logf.New()
+	}
+	if opts.rules == nil {
+		opts.rules = make(Rules)
+	}
+	for n, r := range opts.rawRule {
+		var ru Rule
+		ParseValidateTag(r, &ru, opts.logger)
+		opts.rules[n] = ru
+	}
+	return Validate(func(data any, rules ...Raw) error {
+		for _, raw := range rules {
+			for n, r := range raw {
+				ru := opts.rules[n]
+				ParseValidateTag(r, &ru, opts.logger)
+				opts.rules[n] = ru
+			}
 		}
 		return validate(data, "", opts.logger, opts.rules)
 	})
