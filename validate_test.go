@@ -2,6 +2,8 @@ package validate
 
 import (
 	"testing"
+
+	"github.com/dev-mockingbird/errors"
 )
 
 type SimpleValidateCase struct {
@@ -258,7 +260,7 @@ func TestValidate_map(t *testing.T) {
 }
 
 func TestValidate_rules(t *testing.T) {
-	validator := GetValidator(RR(Raw{
+	validator := GetValidator(R(Rules{
 		".*.B.BB": "omitempty",
 	}))
 	r := map[string]NestedCase{
@@ -279,5 +281,20 @@ func TestValidate_unexported(t *testing.T) {
 	}
 	if err := validator.Validate(r); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestValidate_outerrule(t *testing.T) {
+	validator := GetValidator()
+	r := NestedCase{}
+	rules := Rules{
+		".A.AA": "omitempty",
+		".B":    func(val any) error { return errors.New("hello world") },
+	}
+	if err := validator.Validate(r, rules); err != nil {
+		_, msg := errors.Parse(err)
+		if msg != "hello world" {
+			t.Fatal(err)
+		}
 	}
 }

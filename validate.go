@@ -11,12 +11,12 @@ import (
 )
 
 type Validator interface {
-	Validate(data any, rules ...Raw) error
+	Validate(data any, rules ...Rules) error
 }
 
-type Validate func(data any, rules ...Raw) error
+type Validate func(data any, rules ...Rules) error
 
-func (v Validate) Validate(data any, rules ...Raw) error {
+func (v Validate) Validate(data any, rules ...Rules) error {
 	return v(data, rules...)
 }
 
@@ -26,15 +26,30 @@ func validate(data any, prev string, logger logf.Logfer, rules Rules) error {
 }
 
 func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule Rule) {
+	ruleOf := func(r any) Rule {
+		var ret Rule
+		if raw, ok := r.(string); ok {
+			ParseValidateTag(raw, &ret, logger)
+			return ret
+		} else if ret, ok = r.(Rule); ok {
+			return ret
+		} else if callback, ok := r.(func(any) error); ok {
+			return Rule{Callback: callback}
+		}
+		logger.Logf(logf.Error, "can't find rule for [%s] with %#v", name, rules)
+		return ret
+	}
 	var ok bool
-	rule, ok = rules[name]
+	var r any
+	r, ok = rules[name]
 	defer func() {
 		if rawrule != "" {
 			ParseValidateTag(rawrule, &rule, logger)
 		}
 	}()
 	if ok {
-		return rule
+		rule = ruleOf(r)
+		return
 	}
 	for n, r := range rules {
 		ns := strings.Split(n, ".")
@@ -51,7 +66,7 @@ func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule
 			break
 		}
 		if !notfound {
-			rule = r
+			rule = ruleOf(r)
 			break
 		}
 	}
@@ -118,9 +133,8 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 }
 
 type validateOptions struct {
-	logger  logf.Logfer
-	rules   Rules
-	rawRule Raw
+	logger logf.Logfer
+	rules  Rules
 }
 
 type Option func(*validateOptions)
@@ -131,24 +145,15 @@ func Logger(logger logf.Logfer) Option {
 	}
 }
 
-type Raw map[string]string
-
 func R(rules Rules) Option {
 	return func(opts *validateOptions) {
 		opts.rules = rules
 	}
 }
 
-func RR(rr Raw) Option {
-	return func(opts *validateOptions) {
-		opts.rawRule = rr
-	}
-}
-
-func GetValidator(opt ...Option) Validator {
-	var opts validateOptions
+func applyOption(opts *validateOptions, opt ...Option) {
 	for _, apply := range opt {
-		apply(&opts)
+		apply(opts)
 	}
 	if opts.logger == nil {
 		opts.logger = logf.New()
@@ -156,19 +161,28 @@ func GetValidator(opt ...Option) Validator {
 	if opts.rules == nil {
 		opts.rules = make(Rules)
 	}
-	for n, r := range opts.rawRule {
-		var ru Rule
-		ParseValidateTag(r, &ru, opts.logger)
-		opts.rules[n] = ru
-	}
-	return Validate(func(data any, rules ...Raw) error {
-		for _, raw := range rules {
-			for n, r := range raw {
-				ru := opts.rules[n]
-				ParseValidateTag(r, &ru, opts.logger)
-				opts.rules[n] = ru
+}
+
+func Get(opt ...Option) Validator {
+	var opts validateOptions
+	applyOption(&opts, opt...)
+	return Validate(func(data any, rules ...Rules) error {
+		r := opts.rules
+		if len(rules) > 0 {
+			r = make(Rules)
+			for k, v := range opts.rules {
+				r[k] = v
+			}
+			for _, rule := range rules {
+				for k, v := range rule {
+					r[k] = v
+				}
 			}
 		}
-		return validate(data, "", opts.logger, opts.rules)
+		return validate(data, "", opts.logger, r)
 	})
+}
+
+func GetValidator(opt ...Option) Validator {
+	return Get(opt...)
 }

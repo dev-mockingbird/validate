@@ -22,36 +22,43 @@ type Rule struct {
 	Min       *int64
 	Max       *int64
 	Regexp    string
+	Callback  func(interface{}) error
 	Omitempty bool
 }
 
-type Rules map[string]Rule
+type Rules map[string]any
 
 func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules Rules) (empty bool, err error) {
-	errOccurred := func() bool {
+	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
 			err = errors.Tag(fmt.Errorf("`%s` not allow empty", prev), InvalidData)
 			return true
 		}
 		return false
 	}
+	if r.Callback != nil {
+		if err = r.Callback(val.Interface()); err != nil {
+			err = errors.Tag(err, InvalidData)
+		}
+		return
+	}
 	switch val.Type().Kind() {
 	case reflect.Slice, reflect.Array:
 		empty = val.Len() == 0
-		if !errOccurred() && !empty {
+		if !assertEmpty() && !empty {
 			err = validateReflectValue(val, prev, logger, rules)
 		}
 	case reflect.Interface:
 		empty = val.IsNil()
-		errOccurred()
+		assertEmpty()
 	case reflect.Map:
 		empty = len(val.MapKeys()) == 0
-		if !errOccurred() && !empty {
+		if !assertEmpty() && !empty {
 			err = validateReflectValue(val, prev, logger, rules)
 		}
 	case reflect.String:
 		empty = val.String() == ""
-		if errOccurred() {
+		if assertEmpty() {
 			return
 		}
 		sval := val.String()
@@ -94,50 +101,49 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 		err = validateReflectValue(val, prev, logger, rules)
 	case reflect.Ptr:
 		empty = val.IsNil()
-		if !errOccurred() && !empty {
+		if !assertEmpty() && !empty {
 			err = validateReflectValue(val, prev, logger, rules)
 		}
 	}
 	return
 }
 
-func ParseValidateTag(tag string, rule *Rule, logger logf.Logfer) {
-	rawrules := strings.Split(tag, ";")
+func ParseValidateTag(rawrule string, rule *Rule, logger logf.Logfer) {
+	rawrules := strings.Split(rawrule, ";")
 	for _, rawrule := range rawrules {
-		switch {
-		case rawrule == "omitempty":
+		if rawrule == "omitempty" {
 			rule.Omitempty = true
-		default:
-			kv := strings.Split(rawrule, ":")
-			if len(kv) < 2 {
-				logger.Logf(logf.Warn, "can't recognize rule [%s]", rawrule)
+			continue
+		}
+		kv := strings.Split(rawrule, ":")
+		if len(kv) < 2 {
+			logger.Logf(logf.Warn, "can't recognize rule [%s]", rawrule)
+			continue
+		}
+		switch kv[0] {
+		case "must":
+			rule.Must = strings.Split(kv[1], ",")
+		case "regexp":
+			rule.Regexp = kv[1]
+		case "enum":
+			rule.Enum = strings.Split(kv[1], ",")
+		case "min":
+			min := cast.ToInt64(kv[1])
+			rule.Min = &min
+		case "max":
+			max := cast.ToInt64(kv[1])
+			rule.Max = &max
+		case "range":
+			rr := strings.Split(kv[1], ",")
+			if len(rr) == 0 {
+				max := cast.ToInt64(rr[0])
+				rule.Max = &max
 				continue
 			}
-			switch kv[0] {
-			case "must":
-				rule.Must = strings.Split(kv[1], ",")
-			case "regexp":
-				rule.Regexp = kv[1]
-			case "enum":
-				rule.Enum = strings.Split(kv[1], ",")
-			case "min":
-				min := cast.ToInt64(kv[1])
-				rule.Min = &min
-			case "max":
-				max := cast.ToInt64(kv[1])
-				rule.Max = &max
-			case "range":
-				rr := strings.Split(kv[1], ",")
-				if len(rr) > 1 {
-					min := cast.ToInt64(kv[0])
-					rule.Min = &min
-					max := cast.ToInt64(rr[1])
-					rule.Max = &max
-				} else {
-					max := cast.ToInt64(rr[0])
-					rule.Max = &max
-				}
-			}
+			min := cast.ToInt64(kv[0])
+			rule.Min = &min
+			max := cast.ToInt64(rr[1])
+			rule.Max = &max
 		}
 	}
 }
