@@ -28,7 +28,7 @@ type Rule struct {
 
 type Rules map[string]any
 
-func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules Rules) (empty bool, err error) {
+func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) (empty bool, err error) {
 	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
 			err = errors.Tag(fmt.Errorf("`%s` not allow empty", prev), InvalidData)
@@ -46,7 +46,7 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 	case reflect.Slice, reflect.Array:
 		empty = val.Len() == 0
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, rules)
+			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
 		}
 	case reflect.Interface:
 		empty = val.IsNil()
@@ -54,7 +54,7 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 	case reflect.Map:
 		empty = len(val.MapKeys()) == 0
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, rules)
+			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
 		}
 	case reflect.String:
 		empty = val.String() == ""
@@ -98,11 +98,11 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, rules
 			err = errors.Tag(fmt.Errorf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
 		}
 	case reflect.Struct:
-		err = validateReflectValue(val, prev, logger, rules)
+		err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
 	case reflect.Ptr:
 		empty = val.IsNil()
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, rules)
+			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
 		}
 	}
 	return

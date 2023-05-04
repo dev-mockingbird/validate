@@ -20,9 +20,9 @@ func (v Validate) Validate(data any, rules ...Rules) error {
 	return v(data, rules...)
 }
 
-func validate(data any, prev string, logger logf.Logfer, rules Rules) error {
+func validate(data any, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) error {
 	val := reflect.ValueOf(data)
-	return validateReflectValue(val, prev, logger, rules)
+	return validateReflectValue(val, prev, logger, omitJsonTag, rules)
 }
 
 func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule Rule) {
@@ -73,7 +73,7 @@ func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule
 	return rule
 }
 
-func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, rules Rules) error {
+func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) error {
 	for val.Type().Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
@@ -90,13 +90,11 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 			var rawrule string
 			if tag := f.Tag.Get("validate"); tag != "" {
 				rawrule = tag
-			} else if tag := f.Tag.Get("json"); tag != "" {
-				if strings.Contains(tag, "omitempty") {
-					rawrule = "omitempty"
-				}
+			} else if tag := f.Tag.Get("json"); !omitJsonTag && strings.Contains(tag, "omitempty") {
+				rawrule = "omitempty"
 			}
 			rule := getRule(fn, rules, rawrule, logger)
-			empty, err := rule.Validate(val.Field(i), fn, logger, rules)
+			empty, err := rule.Validate(val.Field(i), fn, logger, omitJsonTag, rules)
 			if err != nil {
 				return err
 			}
@@ -107,13 +105,13 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 		}
 	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			if err := validateReflectValue(val.Index(i), fmt.Sprintf("%s.%d", prev, i), logger, rules); err != nil {
+			if err := validateReflectValue(val.Index(i), fmt.Sprintf("%s.%d", prev, i), logger, omitJsonTag, rules); err != nil {
 				return err
 			}
 		}
 	case reflect.Map:
 		for _, key := range val.MapKeys() {
-			if err := validateReflectValue(val.MapIndex(key), fmt.Sprintf("%s.%s", prev, cast.ToString(key.Interface())), logger, rules); err != nil {
+			if err := validateReflectValue(val.MapIndex(key), fmt.Sprintf("%s.%s", prev, cast.ToString(key.Interface())), logger, omitJsonTag, rules); err != nil {
 				return err
 			}
 		}
@@ -133,8 +131,9 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, ru
 }
 
 type validateOptions struct {
-	logger logf.Logfer
-	rules  Rules
+	logger      logf.Logfer
+	rules       Rules
+	omitJSONTag bool
 }
 
 type Option func(*validateOptions)
@@ -148,6 +147,12 @@ func Logger(logger logf.Logfer) Option {
 func R(rules Rules) Option {
 	return func(opts *validateOptions) {
 		opts.rules = rules
+	}
+}
+
+func OmitJSONTag() Option {
+	return func(opts *validateOptions) {
+		opts.omitJSONTag = true
 	}
 }
 
@@ -179,7 +184,7 @@ func Get(opt ...Option) Validator {
 				}
 			}
 		}
-		return validate(data, "", opts.logger, r)
+		return validate(data, "", opts.logger, opts.omitJSONTag, r)
 	})
 }
 
