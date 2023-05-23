@@ -58,7 +58,7 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 		}
 	case reflect.String:
 		empty = val.String() == ""
-		if assertEmpty() {
+		if assertEmpty() || empty {
 			return
 		}
 		sval := val.String()

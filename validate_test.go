@@ -11,6 +11,17 @@ type SimpleValidateCase struct {
 	Str      string
 }
 
+type SignOption struct {
+	Name        string `json:"name" validate:"must:id;omitempty;regexp:^[a-zA-Z0-9_\\-]*$"`
+	EmailAddr   string `json:"email_addr" validate:"must:id;omitempty;regexp:^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"`
+	PhoneNumber string `json:"phone_number" validate:"must:id;omitempty;regexp:^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"`
+	Password    string `json:"password" validate:"must:pass;omitempty"`
+	VerifyCode  string `json:"verify_code" validate:"must:pass;omitempty"`
+	RemoteIP    string `json:"remote_ip"`
+	Device      string `json:"device,omitempty"`
+	DeviceId    string `json:"device_id,omitempty"`
+}
+
 type RegexpCase struct {
 	Str string `validate:"regexp:^\\d{10}$"`
 }
@@ -39,6 +50,14 @@ type NestedCase struct {
 type UnexportedCase struct {
 	unexported bool
 	Str        string `validate:"omitempty"`
+}
+
+func TestValidate_complex(t *testing.T) {
+	s := SignOption{Name: "hello*", Password: "1234565", RemoteIP: "127.0.0.1:6095"}
+	err := Get().Validate(s)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestValidate_simple(t *testing.T) {
