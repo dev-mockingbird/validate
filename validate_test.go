@@ -53,7 +53,7 @@ type UnexportedCase struct {
 }
 
 func TestValidate_complex(t *testing.T) {
-	s := SignOption{Name: "hello*", Password: "1234565", RemoteIP: "127.0.0.1:6095"}
+	s := SignOption{Name: "hello", Password: "1234565", RemoteIP: "127.0.0.1:6095"}
 	err := Get().Validate(s)
 	if err != nil {
 		t.Fatal(err)
@@ -315,5 +315,17 @@ func TestValidate_outerrule(t *testing.T) {
 		if msg != "hello world" {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestValidate_IsA(t *testing.T) {
+	validator := Get()
+	err := validator.Validate(map[string]string{
+		"password": "a123456789",
+	}, Rules{
+		".password": "is:password",
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

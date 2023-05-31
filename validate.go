@@ -105,15 +105,23 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, om
 		}
 	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			if err := validateReflectValue(val.Index(i), fmt.Sprintf("%s.%d", prev, i), logger, omitJsonTag, rules); err != nil {
+			k := fmt.Sprintf("%s.%d", prev, i)
+			v := val.Index(i)
+			empty, err := getRule(k, rules, "", logger).Validate(v, k, logger, omitJsonTag, rules)
+			if err != nil {
 				return err
 			}
+			emptyes[k] = empty
 		}
 	case reflect.Map:
 		for _, key := range val.MapKeys() {
-			if err := validateReflectValue(val.MapIndex(key), fmt.Sprintf("%s.%s", prev, cast.ToString(key.Interface())), logger, omitJsonTag, rules); err != nil {
+			k := fmt.Sprintf("%s.%s", prev, cast.ToString(key.Interface()))
+			v := val.MapIndex(key)
+			empty, err := getRule(k, rules, "", logger).Validate(v, k, logger, omitJsonTag, rules)
+			if err != nil {
 				return err
 			}
+			emptyes[k] = empty
 		}
 	}
 	for _, fields := range must {
