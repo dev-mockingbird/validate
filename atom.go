@@ -82,6 +82,10 @@ func init() {
 	}
 }
 
+func Register(name string, callback func(any) bool) {
+	atoms[name] = callback
+}
+
 func IsPassword(val any) bool {
 	if !IsASCII(val) {
 		return false

@@ -58,21 +58,26 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
 		}
 	case reflect.String:
-		empty = val.String() == ""
+		sval := val.String()
+		empty = sval == ""
 		if assertEmpty() || empty {
 			return
 		}
-		sval := val.String()
 		if len(r.IsA) > 0 {
+			var found bool
 			for _, a := range r.IsA {
 				if v, ok := atoms[a]; ok {
+					found = true
 					if v(sval) {
 						return
 					}
 				}
 			}
-			err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
-			return
+			if found {
+				err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
+				return
+			}
+			logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
 		}
 		if r.Regexp != "" {
 			var re *regexp.Regexp
