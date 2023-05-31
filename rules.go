@@ -17,7 +17,7 @@ const (
 )
 
 type Rule struct {
-	IsA       string
+	IsA       []string
 	Must      []string
 	Enum      []string
 	Min       *int64
@@ -63,13 +63,16 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 			return
 		}
 		sval := val.String()
-		if r.IsA != "" {
-			if v, ok := atoms[r.IsA]; ok {
-				if !v(sval) {
-					err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, r.IsA), InvalidData)
+		if len(r.IsA) > 0 {
+			for _, a := range r.IsA {
+				if v, ok := atoms[a]; ok {
+					if v(sval) {
+						return
+					}
 				}
-				return
 			}
+			err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
+			return
 		}
 		if r.Regexp != "" {
 			var re *regexp.Regexp
@@ -143,7 +146,10 @@ func ParseValidateTag(rawrule string, rule *Rule, logger logf.Logfer) {
 			max := cast.ToInt64(kv[1])
 			rule.Max = &max
 		case "is":
-			rule.IsA = kv[1]
+			if kv[1] == "" {
+				continue
+			}
+			rule.IsA = strings.Split(kv[1], ",")
 		case "range":
 			rr := strings.Split(kv[1], ",")
 			if len(rr) == 0 {
