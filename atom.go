@@ -1,5 +1,7 @@
 package validate
 
+import "encoding/json"
+
 var (
 	atoms map[string]func(any) bool
 )
@@ -9,6 +11,7 @@ func init() {
 		"phone":               IsNumeric,
 		"username":            IsUsername,
 		"password":            IsPassword,
+		"json":                IsJSON,
 		"strongPassword":      IsStrongPassword,
 		"countryCodeAlpha2":   IsCountryCodeAlpha2,
 		"countryCodeAlpha3":   IsCountryCodeAlpha3,
@@ -125,4 +128,13 @@ func extractPassword(password string) (hasNum, hasUpper, hasLower, hasSpecial bo
 		}
 	}
 	return
+}
+
+func IsJSON(val any) bool {
+	if v, ok := val.([]byte); ok {
+		return json.Valid(v)
+	} else if v, ok := val.(string); ok {
+		return json.Valid([]byte(v))
+	}
+	return false
 }
