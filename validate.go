@@ -7,7 +7,16 @@ import (
 
 	"github.com/dev-mockingbird/errors"
 	"github.com/dev-mockingbird/logf"
+	"github.com/ettle/strcase"
 	"github.com/spf13/cast"
+)
+
+const (
+	OriginCase = iota // follow the definition
+	SnakeCase         // hello_world
+	PascalCase        // HelloWorld
+	CamelCase         // helloWorld
+	KebabCase         // hello-world
 )
 
 type Validator interface {
@@ -20,38 +29,54 @@ func (v Validate) Validate(data any, rules ...Rules) error {
 	return v(data, rules...)
 }
 
-func validate(data any, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) error {
+func (v *validator) validate(data any, prev string) error {
 	val := reflect.ValueOf(data)
-	return validateReflectValue(val, prev, logger, omitJsonTag, rules)
+	return v.validateReflectValue(val, prev)
 }
 
-func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule Rule) {
+func (v *validator) concatName(prev, n string) string {
+	name := n
+	switch v.nameCase {
+	case CamelCase:
+		name = strcase.ToCamel(n)
+	case SnakeCase:
+		name = strcase.ToSnake(n)
+	case PascalCase:
+		name = strcase.ToPascal(n)
+	case KebabCase:
+		name = strcase.ToKebab(n)
+	}
+	return fmt.Sprintf("%s.%s", prev, name)
+}
+
+func (validator *validator) getRule(name, rawrule string) (rule Rule) {
 	ruleOf := func(r any) Rule {
 		var ret Rule
 		if raw, ok := r.(string); ok {
-			ParseValidateTag(raw, &ret, logger)
+			ParseValidateTag(raw, &ret, validator.logger)
 			return ret
 		} else if ret, ok = r.(Rule); ok {
 			return ret
 		} else if callback, ok := r.(func(any) error); ok {
 			return Rule{Callback: callback}
 		}
-		logger.Logf(logf.Error, "can't find rule for [%s] with %#v", name, rules)
+		validator.logger.Logf(logf.Error, "can't find rule for [%s] with %#v", name, validator.rules)
 		return ret
 	}
 	var ok bool
 	var r any
-	r, ok = rules[name]
+	r, ok = validator.rules[name]
 	defer func() {
+		rule.validator = validator
 		if rawrule != "" {
-			ParseValidateTag(rawrule, &rule, logger)
+			ParseValidateTag(rawrule, &rule, validator.logger)
 		}
 	}()
 	if ok {
 		rule = ruleOf(r)
 		return
 	}
-	for n, r := range rules {
+	for n, r := range validator.rules {
 		ns := strings.Split(n, ".")
 		names := strings.Split(name, ".")
 		if len(ns) != len(names) {
@@ -73,7 +98,7 @@ func getRule(name string, rules Rules, rawrule string, logger logf.Logfer) (rule
 	return rule
 }
 
-func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) error {
+func (validator *validator) validateReflectValue(val reflect.Value, prev string) error {
 	for val.Type().Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
@@ -86,15 +111,19 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, om
 			if !f.IsExported() {
 				continue
 			}
-			fn := fmt.Sprintf("%s.%s", prev, f.Name)
+			fn := validator.concatName(prev, f.Name)
 			var rawrule string
 			if tag := f.Tag.Get("validate"); tag != "" {
 				rawrule = tag
-			} else if tag := f.Tag.Get("json"); !omitJsonTag && strings.Contains(tag, "omitempty") {
-				rawrule = "omitempty"
+			} else if tag := f.Tag.Get("json"); !validator.omitJSONTag && tag != "" {
+				ts := strings.Split(tag, ",")
+				rawrule = "name:" + ts[0]
+				if len(ts) > 1 && ts[1] == "omitempty" {
+					rawrule += ";omitempty"
+				}
 			}
-			rule := getRule(fn, rules, rawrule, logger)
-			empty, err := rule.Validate(val.Field(i), fn, logger, omitJsonTag, rules)
+			rule := validator.getRule(fn, rawrule)
+			empty, err := rule.Validate(val.Field(i), fn)
 			if err != nil {
 				return err
 			}
@@ -107,7 +136,7 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, om
 		for i := 0; i < val.Len(); i++ {
 			k := fmt.Sprintf("%s.%d", prev, i)
 			v := val.Index(i)
-			empty, err := getRule(k, rules, "", logger).Validate(v, k, logger, omitJsonTag, rules)
+			empty, err := validator.getRule(k, "").Validate(v, k)
 			if err != nil {
 				return err
 			}
@@ -117,7 +146,7 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, om
 		for _, key := range val.MapKeys() {
 			k := fmt.Sprintf("%s.%s", prev, cast.ToString(key.Interface()))
 			v := val.MapIndex(key)
-			empty, err := getRule(k, rules, "", logger).Validate(v, k, logger, omitJsonTag, rules)
+			empty, err := validator.getRule(k, "").Validate(v, k)
 			if err != nil {
 				return err
 			}
@@ -138,62 +167,77 @@ func validateReflectValue(val reflect.Value, prev string, logger logf.Logfer, om
 	return nil
 }
 
-type validateOptions struct {
+type validator struct {
 	logger      logf.Logfer
 	rules       Rules
+	nameCase    int
 	omitJSONTag bool
 }
 
-type Option func(*validateOptions)
+type Option func(*validator)
 
 func Logger(logger logf.Logfer) Option {
-	return func(opts *validateOptions) {
+	return func(opts *validator) {
 		opts.logger = logger
 	}
 }
 
-func R(rules Rules) Option {
-	return func(opts *validateOptions) {
+func With(rules Rules) Option {
+	return func(opts *validator) {
 		opts.rules = rules
 	}
 }
 
+func NameCase(namecase int) Option {
+	return func(opts *validator) {
+		opts.nameCase = namecase
+	}
+}
+
 func OmitJSONTag() Option {
-	return func(opts *validateOptions) {
+	return func(opts *validator) {
 		opts.omitJSONTag = true
 	}
 }
 
-func applyOption(opts *validateOptions, opt ...Option) {
+func (v *validator) applyOption(opt ...Option) {
 	for _, apply := range opt {
-		apply(opts)
+		apply(v)
 	}
-	if opts.logger == nil {
-		opts.logger = logf.New()
+	if v.logger == nil {
+		v.logger = logf.New()
 	}
-	if opts.rules == nil {
-		opts.rules = make(Rules)
+	if v.rules == nil {
+		v.rules = make(Rules)
+	}
+	if v.nameCase == 0 {
+		v.nameCase = OriginCase
 	}
 }
 
-func Get(opt ...Option) Validator {
-	var opts validateOptions
-	applyOption(&opts, opt...)
-	return Validate(func(data any, rules ...Rules) error {
-		r := opts.rules
-		if len(rules) > 0 {
-			r = make(Rules)
-			for k, v := range opts.rules {
-				r[k] = v
-			}
-			for _, rule := range rules {
-				for k, v := range rule {
-					r[k] = v
-				}
+func (validator *validator) With(rules ...Rules) *validator {
+	ret := *validator
+	if len(rules) > 0 {
+		for _, rule := range rules {
+			for k, v := range rule {
+				ret.rules[k] = v
 			}
 		}
-		return validate(data, "", opts.logger, opts.omitJSONTag, r)
-	})
+	}
+	return &ret
+}
+
+func (v *validator) Validate(data any, rules ...Rules) error {
+	if len(rules) > 0 {
+		v = v.With(rules...)
+	}
+	return v.validate(data, "")
+}
+
+func Get(opt ...Option) Validator {
+	validator := &validator{}
+	validator.applyOption(opt...)
+	return validator
 }
 
 func GetValidator(opt ...Option) Validator {

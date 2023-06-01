@@ -200,6 +200,40 @@ func TestValidate_nested(t *testing.T) {
 	}
 }
 
+func TestValidate_snakecase(t *testing.T) {
+	r := NestedCase{}
+	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
+		if err.Error() != "[invalid-data] `.a.aa` not allow empty" {
+			t.Fatal(err)
+		}
+	}
+	r = NestedCase{
+		A: struct{ AA string }{AA: "a"},
+	}
+	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
+		if err.Error() != "[invalid-data] `.b` not allow empty" {
+			t.Fatal(err)
+		}
+	}
+	r = NestedCase{
+		A: struct{ AA string }{AA: "a"},
+		B: &struct{ BB *int }{},
+	}
+	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
+		if err.Error() != "[invalid-data] `.b.bb` not allow empty" {
+			t.Fatal(err)
+		}
+	}
+	b := 0
+	r = NestedCase{
+		A: struct{ AA string }{AA: "a"},
+		B: &struct{ BB *int }{BB: &b},
+	}
+	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestValidate_slice(t *testing.T) {
 	r := []NestedCase{
 		{},
@@ -279,7 +313,7 @@ func TestValidate_map(t *testing.T) {
 }
 
 func TestValidate_rules(t *testing.T) {
-	validator := GetValidator(R(Rules{
+	validator := GetValidator(With(Rules{
 		".*.B.BB": "omitempty",
 	}))
 	r := map[string]NestedCase{

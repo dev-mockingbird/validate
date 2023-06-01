@@ -162,7 +162,7 @@ func IsAlphaUnicode(val any) bool {
 	return isMatchingRegexp(val, alphaUnicodeRegex)
 }
 func IsAlphaUnicodeNumeric(val any) bool {
-	return isMatchingRegexp(val, alphaUnicodeRegex)
+	return isMatchingRegexp(val, alphaUnicodeNumericRegex)
 }
 func IsNumeric(val any) bool {
 	return isMatchingRegexp(val, numericRegex)

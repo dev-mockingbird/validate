@@ -25,11 +25,12 @@ type Rule struct {
 	Regexp    string
 	Callback  func(interface{}) error
 	Omitempty bool
+	validator *validator
 }
 
 type Rules map[string]any
 
-func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJsonTag bool, rules Rules) (empty bool, err error) {
+func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
 			err = errors.Tag(fmt.Errorf("`%s` not allow empty", prev), InvalidData)
@@ -47,7 +48,7 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 	case reflect.Slice, reflect.Array:
 		empty = val.Len() == 0
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
+			err = r.validator.validateReflectValue(val, prev)
 		}
 	case reflect.Interface:
 		empty = val.IsNil()
@@ -55,7 +56,7 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 	case reflect.Map:
 		empty = len(val.MapKeys()) == 0
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
+			err = r.validator.validateReflectValue(val, prev)
 		}
 	case reflect.String:
 		sval := val.String()
@@ -77,12 +78,12 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 				err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
 				return
 			}
-			logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
+			r.validator.logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
 		}
 		if r.Regexp != "" {
 			var re *regexp.Regexp
 			if re, err = regexp.Compile(r.Regexp); err != nil {
-				logger.Logf(logf.Warn, "compile regexp for `%s` failed: %s", prev, err.Error())
+				r.validator.logger.Logf(logf.Warn, "compile regexp for `%s` failed: %s", prev, err.Error())
 				return
 			}
 			if !re.MatchString(sval) {
@@ -115,11 +116,11 @@ func (r Rule) Validate(val reflect.Value, prev string, logger logf.Logfer, omitJ
 			err = errors.Tag(fmt.Errorf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
 		}
 	case reflect.Struct:
-		err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
+		err = r.validator.validateReflectValue(val, prev)
 	case reflect.Ptr:
 		empty = val.IsNil()
 		if !assertEmpty() && !empty {
-			err = validateReflectValue(val, prev, logger, omitJsonTag, rules)
+			err = r.validator.validateReflectValue(val, prev)
 		}
 	}
 	return
