@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -33,7 +32,7 @@ type Rules map[string]any
 func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
-			err = errors.Tag(fmt.Errorf("`%s` not allow empty", prev), InvalidData)
+			err = errors.New(r.validator.printer.Sprintf("`%s` not allow empty", prev), InvalidData)
 			return true
 		}
 		return false
@@ -75,7 +74,7 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 			}
 			if found {
-				err = errors.Tag(fmt.Errorf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
+				err = errors.New(r.validator.printer.Sprintf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
 				return
 			}
 			r.validator.logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
@@ -87,12 +86,21 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				return
 			}
 			if !re.MatchString(sval) {
-				err = errors.Tag(fmt.Errorf("`%s` cound be malformed", prev), InvalidData)
+				err = errors.New(r.validator.printer.Sprintf("`%s` cound be malformed", prev), InvalidData)
 			}
 		}
 		if len(r.Enum) > 0 {
 			if !funk.ContainsString(r.Enum, sval) {
-				err = errors.Tag(fmt.Errorf("`%s` should be one of [%s], current value is [%s]", prev, strings.Join(r.Enum, ","), sval), InvalidData)
+				err = errors.New(r.validator.printer.Sprintf("`%s` should be one of [%s], current value is [%s]", prev, strings.Join(r.Enum, ","), sval), InvalidData)
+			}
+		}
+		if r.Min != nil {
+			if len(sval) < int(*r.Min) {
+				err = errors.New(r.validator.printer.Sprintf("`%s` has a minimum length [%d]", prev, *r.Min))
+			}
+		} else if r.Max != nil {
+			if len(sval) > int(*r.Max) {
+				err = errors.New(r.validator.printer.Sprintf("`%s` has a maximum length [%d]", prev, *r.Max))
 			}
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -106,14 +114,14 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 				return ret
 			}(), ival) {
-				err = errors.Tag(fmt.Errorf("`%s` should be one of [%s], current value is [%d]", prev, strings.Join(r.Enum, ","), ival), InvalidData)
+				err = errors.New(r.validator.printer.Sprintf("`%s` should be one of [%s], current value is [%d]", prev, strings.Join(r.Enum, ","), ival), InvalidData)
 			}
 		}
 		if r.Min != nil && ival < *r.Min {
-			err = errors.Tag(fmt.Errorf("`%s` should be greater than equal [%d], current value is [%d]", prev, *r.Min, ival), InvalidData)
+			err = errors.New(r.validator.printer.Sprintf("`%s` should be greater than equal [%d], current value is [%d]", prev, *r.Min, ival), InvalidData)
 		}
 		if r.Max != nil && ival > *r.Max {
-			err = errors.Tag(fmt.Errorf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
+			err = errors.New(r.validator.printer.Sprintf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
 		}
 	case reflect.Struct:
 		err = r.validator.validateReflectValue(val, prev)

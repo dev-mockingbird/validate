@@ -1,0 +1,243 @@
+{
+    "language": "zh",
+    "messages": [
+        {
+            "id": "`{Prev}` not allow empty",
+            "message": "`{Prev}` not allow empty",
+            "translation": "`{Prev}`不允许为空",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` is not a {IsA_}",
+            "message": "`{Prev}` is not a {IsA_}",
+            "translation": "`{Prev}`不是`{IsA_}`",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "IsA_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.IsA, \",\")"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` cound be malformed",
+            "message": "`{Prev}` cound be malformed",
+            "translation": "`{Prev}`格式错误",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` should be one of [{Enum_}], current value is [{Sval}]",
+            "message": "`{Prev}` should be one of [{Enum_}], current value is [{Sval}]",
+            "translation": "`{Prev}`不是[{Enum_}]中的任何一个, 当前值是[{Sval}]",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Enum_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.Enum, \",\")"
+                },
+                {
+                    "id": "Sval",
+                    "string": "%[3]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 3,
+                    "expr": "sval"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` has a minimum length [{Min}]",
+            "message": "`{Prev}` has a minimum length [{Min}]",
+            "translation": "`{Prev}`不满足最小长度[{Min}]的约束",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Min",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Min"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` has a maximum length [{Max}]",
+            "message": "`{Prev}` has a maximum length [{Max}]",
+            "translation": "{Prev}`不满足最大长度[{Max}]的约束",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Max",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Max"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` should be one of [{Enum_}], current value is [{Ival}]",
+            "message": "`{Prev}` should be one of [{Enum_}], current value is [{Ival}]",
+            "translation": "`{Prev}`不是[{Enum_}]中的任何一个, 当前值是[{Ival}]",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Enum_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.Enum, \",\")"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` should be greater than equal [{Min}], current value is [{Ival}]",
+            "message": "`{Prev}` should be greater than equal [{Min}], current value is [{Ival}]",
+            "translation": "`{Prev}`应该大于等于[{Min}], 当前值是[{Ival}]",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Min",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Min"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ]
+        },
+        {
+            "id": "`{Prev}` should be less than equal [{Max}], current value is [{Ival}]",
+            "message": "`{Prev}` should be less than equal [{Max}], current value is [{Ival}]",
+            "translation": "`{Prev}`应该小于等于[{Max}], 当前值是[{Ival}]",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Max",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Max"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ]
+        },
+        {
+            "id": "at least one of [{Joinfields_}] should be valued",
+            "message": "at least one of [{Joinfields_}] should be valued",
+            "translation": "[{Joinfields_}]这些变量中至少有一个被赋值",
+            "placeholders": [
+                {
+                    "id": "Joinfields_",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "strings.Join(fields, \",\")"
+                }
+            ]
+        }
+    ]
+}

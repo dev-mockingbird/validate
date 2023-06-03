@@ -1,0 +1,263 @@
+{
+    "language": "en",
+    "messages": [
+        {
+            "id": "`{Prev}` not allow empty",
+            "message": "`{Prev}` not allow empty",
+            "translation": "`{Prev}` not allow empty",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` is not a {IsA_}",
+            "message": "`{Prev}` is not a {IsA_}",
+            "translation": "`{Prev}` is not a {IsA_}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "IsA_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.IsA, \",\")"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` cound be malformed",
+            "message": "`{Prev}` cound be malformed",
+            "translation": "`{Prev}` cound be malformed",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` should be one of [{Enum_}], current value is [{Sval}]",
+            "message": "`{Prev}` should be one of [{Enum_}], current value is [{Sval}]",
+            "translation": "`{Prev}` should be one of [{Enum_}], current value is [{Sval}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Enum_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.Enum, \",\")"
+                },
+                {
+                    "id": "Sval",
+                    "string": "%[3]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 3,
+                    "expr": "sval"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` has a minimum length [{Min}]",
+            "message": "`{Prev}` has a minimum length [{Min}]",
+            "translation": "`{Prev}` has a minimum length [{Min}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Min",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Min"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` has a maximum length [{Max}]",
+            "message": "`{Prev}` has a maximum length [{Max}]",
+            "translation": "`{Prev}` has a maximum length [{Max}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Max",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Max"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` should be one of [{Enum_}], current value is [{Ival}]",
+            "message": "`{Prev}` should be one of [{Enum_}], current value is [{Ival}]",
+            "translation": "`{Prev}` should be one of [{Enum_}], current value is [{Ival}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Enum_",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "strings.Join(r.Enum, \",\")"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` should be greater than equal [{Min}], current value is [{Ival}]",
+            "message": "`{Prev}` should be greater than equal [{Min}], current value is [{Ival}]",
+            "translation": "`{Prev}` should be greater than equal [{Min}], current value is [{Ival}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Min",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Min"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "`{Prev}` should be less than equal [{Max}], current value is [{Ival}]",
+            "message": "`{Prev}` should be less than equal [{Max}], current value is [{Ival}]",
+            "translation": "`{Prev}` should be less than equal [{Max}], current value is [{Ival}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Prev",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "prev"
+                },
+                {
+                    "id": "Max",
+                    "string": "%[2]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 2,
+                    "expr": "*r.Max"
+                },
+                {
+                    "id": "Ival",
+                    "string": "%[3]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 3,
+                    "expr": "ival"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "at least one of [{Joinfields_}] should be valued",
+            "message": "at least one of [{Joinfields_}] should be valued",
+            "translation": "at least one of [{Joinfields_}] should be valued",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Joinfields_",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "strings.Join(fields, \",\")"
+                }
+            ],
+            "fuzzy": true
+        }
+    ]
+}

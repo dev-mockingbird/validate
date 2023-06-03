@@ -7,8 +7,11 @@ import (
 
 	"github.com/dev-mockingbird/errors"
 	"github.com/dev-mockingbird/logf"
+	_ "github.com/dev-mockingbird/validate/catalog"
 	"github.com/ettle/strcase"
 	"github.com/spf13/cast"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 const (
@@ -161,7 +164,7 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			}
 		}
 		if !found {
-			return errors.Tag(fmt.Errorf("at least one of [%s] should be valued", strings.Join(fields, ",")), InvalidData)
+			return errors.New(validator.printer.Sprintf("at least one of [%s] should be valued", strings.Join(fields, ",")), InvalidData)
 		}
 	}
 	return nil
@@ -169,6 +172,7 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 
 type validator struct {
 	logger      logf.Logfer
+	printer     *message.Printer
 	rules       Rules
 	nameCase    int
 	omitJSONTag bool
@@ -213,6 +217,9 @@ func (v *validator) applyOption(opt ...Option) {
 	if v.nameCase == 0 {
 		v.nameCase = OriginCase
 	}
+	if v.printer == nil {
+		v.printer = message.NewPrinter(language.English)
+	}
 }
 
 func (validator *validator) With(rules ...Rules) *validator {
@@ -225,6 +232,12 @@ func (validator *validator) With(rules ...Rules) *validator {
 		}
 	}
 	return &ret
+}
+
+func Printer(printer *message.Printer) Option {
+	return func(v *validator) {
+		v.printer = printer
+	}
 }
 
 func (v *validator) Validate(data any, rules ...Rules) error {
