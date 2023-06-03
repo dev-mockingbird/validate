@@ -204,24 +204,6 @@ func OmitJSONTag() Option {
 	}
 }
 
-func (v *validator) applyOption(opt ...Option) {
-	for _, apply := range opt {
-		apply(v)
-	}
-	if v.logger == nil {
-		v.logger = logf.New()
-	}
-	if v.rules == nil {
-		v.rules = make(Rules)
-	}
-	if v.nameCase == 0 {
-		v.nameCase = OriginCase
-	}
-	if v.printer == nil {
-		v.printer = message.NewPrinter(language.English)
-	}
-}
-
 func (validator *validator) With(rules ...Rules) *validator {
 	ret := *validator
 	if len(rules) > 0 {
@@ -230,6 +212,26 @@ func (validator *validator) With(rules ...Rules) *validator {
 				ret.rules[k] = v
 			}
 		}
+	}
+	return &ret
+}
+
+func (v validator) Config(opt ...Option) *validator {
+	ret := v
+	for _, apply := range opt {
+		apply(&ret)
+	}
+	if ret.logger == nil {
+		ret.logger = logf.New()
+	}
+	if ret.rules == nil {
+		ret.rules = make(Rules)
+	}
+	if ret.nameCase == 0 {
+		ret.nameCase = OriginCase
+	}
+	if ret.printer == nil {
+		ret.printer = message.NewPrinter(language.English)
 	}
 	return &ret
 }
@@ -248,9 +250,8 @@ func (v *validator) Validate(data any, rules ...Rules) error {
 }
 
 func Get(opt ...Option) Validator {
-	validator := &validator{}
-	validator.applyOption(opt...)
-	return validator
+	validator := validator{}
+	return validator.Config(opt...)
 }
 
 func GetValidator(opt ...Option) Validator {
