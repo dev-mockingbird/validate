@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -14,6 +15,15 @@ import (
 const (
 	InvalidData = "invalid-data"
 )
+
+type ValidateError struct {
+	Fields  []string
+	Message string
+}
+
+func (v ValidateError) Error() string {
+	return fmt.Sprintf("[invalid-data] `%s` %s", strings.Join(v.Fields, ","), v.Message)
+}
 
 type Rule struct {
 	IsA       []string
@@ -32,7 +42,9 @@ type Rules map[string]any
 func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
-			err = errors.New(r.validator.printer.Sprintf("`%s` not allow empty", prev), InvalidData)
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("not allow empty")}
 			return true
 		}
 		return false
@@ -74,7 +86,10 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 			}
 			if found {
-				err = errors.New(r.validator.printer.Sprintf("`%s` is not a %s", prev, strings.Join(r.IsA, ",")), InvalidData)
+				err = ValidateError{
+					Fields:  []string{prev},
+					Message: r.validator.printer.Sprintf("is not a %s", strings.Join(r.IsA, ",")),
+				}
 				return
 			}
 			r.validator.logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
@@ -86,22 +101,31 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				return
 			}
 			if !re.MatchString(sval) {
-				err = errors.New(r.validator.printer.Sprintf("`%s` cound be malformed", prev), InvalidData)
+				err = ValidateError{
+					Fields:  []string{prev},
+					Message: r.validator.printer.Sprintf("cound be malformed"),
+				}
+				return
 			}
 		}
-		if len(r.Enum) > 0 {
-			if !funk.ContainsString(r.Enum, sval) {
-				err = errors.New(r.validator.printer.Sprintf("`%s` should be one of [%s], current value is [%s]", prev, strings.Join(r.Enum, ","), sval), InvalidData)
+		if len(r.Enum) > 0 && !funk.ContainsString(r.Enum, sval) {
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("should be one of [%s], current value is [%s]", strings.Join(r.Enum, ","), sval),
 			}
-		}
-		if r.Min != nil {
-			if len(sval) < int(*r.Min) {
-				err = errors.New(r.validator.printer.Sprintf("`%s` has a minimum length [%d]", prev, *r.Min))
+			return
+		} else if r.Min != nil && len(sval) < int(*r.Min) {
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("has a minimum length [%d]", *r.Min),
 			}
-		} else if r.Max != nil {
-			if len(sval) > int(*r.Max) {
-				err = errors.New(r.validator.printer.Sprintf("`%s` has a maximum length [%d]", prev, *r.Max))
+			return
+		} else if r.Max != nil && len(sval) > int(*r.Max) {
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("has a maximum length [%d]", *r.Max),
 			}
+			return
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -114,14 +138,24 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 				return ret
 			}(), ival) {
-				err = errors.New(r.validator.printer.Sprintf("`%s` should be one of [%s], current value is [%d]", prev, strings.Join(r.Enum, ","), ival), InvalidData)
+				err = ValidateError{
+					Fields:  []string{prev},
+					Message: r.validator.printer.Sprintf("should be one of [%s], current value is [%d]", strings.Join(r.Enum, ","), ival),
+				}
+				return
 			}
-		}
-		if r.Min != nil && ival < *r.Min {
-			err = errors.New(r.validator.printer.Sprintf("`%s` should be greater than equal [%d], current value is [%d]", prev, *r.Min, ival), InvalidData)
-		}
-		if r.Max != nil && ival > *r.Max {
-			err = errors.New(r.validator.printer.Sprintf("`%s` should be less than equal [%d], current value is [%d]", prev, *r.Max, ival), InvalidData)
+		} else if r.Min != nil && ival < *r.Min {
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("should be greater than equal [%d], current value is [%d]", *r.Min, ival),
+			}
+			return
+		} else if r.Max != nil && ival > *r.Max {
+			err = ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("should be less than equal [%d], current value is [%d]", *r.Max, ival),
+			}
+			return
 		}
 	case reflect.Struct:
 		err = r.validator.validateReflectValue(val, prev)

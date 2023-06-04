@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/dev-mockingbird/errors"
 	"github.com/dev-mockingbird/logf"
 	_ "github.com/dev-mockingbird/validate/catalog"
 	"github.com/ettle/strcase"
@@ -164,7 +163,10 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			}
 		}
 		if !found {
-			return errors.New(validator.printer.Sprintf("at least one of [%s] should be valued", strings.Join(fields, ",")), InvalidData)
+			return ValidateError{
+				Fields:  fields,
+				Message: validator.printer.Sprintf("at least one of [%s] should be valued", strings.Join(fields, ",")),
+			}
 		}
 	}
 	return nil

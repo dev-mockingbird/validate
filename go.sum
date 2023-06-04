@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dev-mockingbird/errors v0.0.4 h1:rxREyO8kErbvQWMZ+vKc52RQXHeR+jkCi9RA0XqKK8s=
-github.com/dev-mockingbird/errors v0.0.4/go.mod h1:qAWn4fOG/CCrer66kphOnxnGFK6UiMK56iSu2W7yFiE=
+github.com/dev-mockingbird/errors v0.0.7 h1:A6oW6WB7QkIrM/ZUiZ9pVfOIZVAgk7aXABxtLxR84m4=
+github.com/dev-mockingbird/errors v0.0.7/go.mod h1:qAWn4fOG/CCrer66kphOnxnGFK6UiMK56iSu2W7yFiE=
 github.com/dev-mockingbird/logf v0.0.6 h1:kunBbfPvYBzQ8D24VWnDtTi9qDdjwtlsFzN5XJ92vmQ=
 github.com/dev-mockingbird/logf v0.0.6/go.mod h1:TPw7PNt4Q1QETsveQaaACox7FDs5nLTlnivDVemToRA=
 github.com/ettle/strcase v0.1.1 h1:htFueZyVeE1XNnMEfbqp5r67qAN/4r6ya1ysq8Q+Zcw=

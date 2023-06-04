@@ -39,43 +39,41 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"`%s` cound be malformed":        2,
-	"`%s` has a maximum length [%d]": 5,
-	"`%s` has a minimum length [%d]": 4,
-	"`%s` is not a %s":               1,
-	"`%s` not allow empty":           0,
-	"`%s` should be greater than equal [%d], current value is [%d]": 7,
-	"`%s` should be less than equal [%d], current value is [%d]":    8,
-	"`%s` should be one of [%s], current value is [%d]":             6,
-	"`%s` should be one of [%s], current value is [%s]":             3,
-	"at least one of [%s] should be valued":                         9,
+	"at least one of [%s] should be valued": 9,
+	"cound be malformed":                    2,
+	"has a maximum length [%d]":             5,
+	"has a minimum length [%d]":             4,
+	"is not a %s":                           1,
+	"not allow empty":                       0,
+	"should be greater than equal [%d], current value is [%d]": 7,
+	"should be less than equal [%d], current value is [%d]":    8,
+	"should be one of [%s], current value is [%d]":             6,
+	"should be one of [%s], current value is [%s]":             3,
 }
 
 var enIndex = []uint32{ // 11 elements
-	0x00000000, 0x00000018, 0x0000002f, 0x0000004a,
-	0x00000085, 0x000000aa, 0x000000cf, 0x0000010a,
-	0x00000151, 0x00000195, 0x000001be,
+	0x00000000, 0x00000010, 0x0000001f, 0x00000032,
+	0x00000065, 0x00000082, 0x0000009f, 0x000000d2,
+	0x00000111, 0x0000014d, 0x00000176,
 } // Size: 68 bytes
 
-const enData string = "" + // Size: 446 bytes
-	"\x02`%[1]s` not allow empty\x02`%[1]s` is not a %[2]s\x02`%[1]s` cound b" +
-	"e malformed\x02`%[1]s` should be one of [%[2]s], current value is [%[3]s" +
-	"]\x02`%[1]s` has a minimum length [%[2]d]\x02`%[1]s` has a maximum lengt" +
-	"h [%[2]d]\x02`%[1]s` should be one of [%[2]s], current value is [%[3]d]" +
-	"\x02`%[1]s` should be greater than equal [%[2]d], current value is [%[3]" +
-	"d]\x02`%[1]s` should be less than equal [%[2]d], current value is [%[3]d" +
-	"]\x02at least one of [%[1]s] should be valued"
+const enData string = "" + // Size: 374 bytes
+	"\x02not allow empty\x02is not a %[1]s\x02cound be malformed\x02should be" +
+	" one of [%[1]s], current value is [%[2]s]\x02has a minimum length [%[1]d" +
+	"]\x02has a maximum length [%[1]d]\x02should be one of [%[1]s], current v" +
+	"alue is [%[2]d]\x02should be greater than equal [%[1]d], current value i" +
+	"s [%[2]d]\x02should be less than equal [%[1]d], current value is [%[2]d]" +
+	"\x02at least one of [%[1]s] should be valued"
 
 var zhIndex = []uint32{ // 11 elements
-	0x00000000, 0x00000017, 0x0000002c, 0x00000040,
-	0x0000007c, 0x000000a9, 0x000000d5, 0x00000111,
-	0x00000147, 0x0000017d, 0x000001ac,
+	0x00000000, 0x00000010, 0x0000001c, 0x00000029,
+	0x0000005d, 0x00000083, 0x000000a9, 0x000000dd,
+	0x0000010d, 0x0000013d, 0x00000160,
 } // Size: 68 bytes
 
-const zhData string = "" + // Size: 428 bytes
-	"\x02`%[1]s`不允许为空\x02`%[1]s`不是`%[2]s`\x02`%[1]s`格式错误\x02`%[1]s`不是[%[2]s]中" +
-	"的任何一个, 当前值是[%[3]s]\x02`%[1]s`不满足最小长度[%[2]d]的约束\x02%[1]s`不满足最大长度[%[2]d]" +
-	"的约束\x02`%[1]s`不是[%[2]s]中的任何一个, 当前值是[%[3]d]\x02`%[1]s`应该大于等于[%[2]d], 当前" +
-	"值是[%[3]d]\x02`%[1]s`应该小于等于[%[2]d], 当前值是[%[3]d]\x02[%[1]s]这些变量中至少有一个被赋值"
+const zhData string = "" + // Size: 352 bytes
+	"\x02不允许为空\x02不是%[1]s\x02格式错误\x02应该是[%[1]s]中的一个，当前值为 [%[2]s]\x02不满足最小长度[%" +
+	"[1]d]的约束\x02不满足最大长度[%[1]d]的约束\x02应该是[%[1]s]中的一个，当前值为 [%[2]d]\x02应该大于等于[%" +
+	"[1]d]，当前值为[%[2]d]\x02应该小于等于[%[1]d]，当前值为[%[2]d]\x02至少[%[1]s]中的一个被赋值"
 
-	// Total table size 1010 bytes (0KiB); checksum: 7544E1E1
+	// Total table size 862 bytes (0KiB); checksum: 63589230
