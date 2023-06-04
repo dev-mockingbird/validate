@@ -17,8 +17,8 @@ const (
 )
 
 type ValidateError struct {
-	Fields  []string
-	Message string
+	Fields  []string `json:"fields"`
+	Message string   `json:"message"`
 }
 
 func (v ValidateError) Error() string {
