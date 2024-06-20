@@ -1,9 +1,8 @@
 package validate
 
 import (
+	"errors"
 	"testing"
-
-	"github.com/dev-mockingbird/errors"
 )
 
 type SimpleValidateCase struct {
@@ -63,7 +62,7 @@ func TestValidate_complex(t *testing.T) {
 func TestValidate_simple(t *testing.T) {
 	r := SimpleValidateCase{}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.PtrIntId` not allow empty" {
+		if err.Error() != "`.PtrIntId` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -72,7 +71,7 @@ func TestValidate_simple(t *testing.T) {
 		PtrIntId: &i,
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Str` not allow empty" {
+		if err.Error() != "`.Str` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -81,7 +80,7 @@ func TestValidate_simple(t *testing.T) {
 func TestValidate_regexp(t *testing.T) {
 	r := RegexpCase{}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Str` not allow empty" {
+		if err.Error() != "`.Str` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -89,7 +88,7 @@ func TestValidate_regexp(t *testing.T) {
 		Str: "hello",
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Str` cound be malformed" {
+		if err.Error() != "`.Str` cound be malformed" {
 			t.Fatal(err)
 		}
 	}
@@ -104,7 +103,7 @@ func TestValidate_regexp(t *testing.T) {
 func TestValidate_enumString(t *testing.T) {
 	r := EnumStrCase{}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Str` not allow empty" {
+		if err.Error() != "`.Str` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -112,7 +111,7 @@ func TestValidate_enumString(t *testing.T) {
 		Str: "d",
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Str` should be one of [a,b,c], current value is [d]" {
+		if err.Error() != "`.Str` should be one of [a,b,c], current value is [d]" {
 			t.Fatal(err)
 		}
 	}
@@ -129,7 +128,7 @@ func TestValidate_enumInt(t *testing.T) {
 		Int: 4,
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Int` should be one of [1,2,3], current value is [4]" {
+		if err.Error() != "`.Int` should be one of [1,2,3], current value is [4]" {
 			t.Fatal(err)
 		}
 	}
@@ -146,7 +145,7 @@ func TestValidate_minmax(t *testing.T) {
 		Int: 0,
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Int` should be greater than equal [1], current value is [0]" {
+		if err.Error() != "`.Int` should be greater than equal [1], current value is [0]" {
 			t.Fatal(err)
 		}
 	}
@@ -154,7 +153,7 @@ func TestValidate_minmax(t *testing.T) {
 		Int: 11,
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.Int` should be less than equal [10], current value is [11]" {
+		if err.Error() != "`.Int` should be less than equal [10], current value is [11]" {
 			t.Fatal(err)
 		}
 	}
@@ -169,7 +168,7 @@ func TestValidate_minmax(t *testing.T) {
 func TestValidate_nested(t *testing.T) {
 	r := NestedCase{}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.A.AA` not allow empty" {
+		if err.Error() != "`.A.AA` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -177,7 +176,7 @@ func TestValidate_nested(t *testing.T) {
 		A: struct{ AA string }{AA: "a"},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.B` not allow empty" {
+		if err.Error() != "`.B` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -186,7 +185,7 @@ func TestValidate_nested(t *testing.T) {
 		B: &struct{ BB *int }{},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.B.BB` not allow empty" {
+		if err.Error() != "`.B.BB` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -203,7 +202,7 @@ func TestValidate_nested(t *testing.T) {
 func TestValidate_snakecase(t *testing.T) {
 	r := NestedCase{}
 	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.a.aa` not allow empty" {
+		if err.Error() != "`.a.aa` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -211,7 +210,7 @@ func TestValidate_snakecase(t *testing.T) {
 		A: struct{ AA string }{AA: "a"},
 	}
 	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.b` not allow empty" {
+		if err.Error() != "`.b` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -220,7 +219,7 @@ func TestValidate_snakecase(t *testing.T) {
 		B: &struct{ BB *int }{},
 	}
 	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.b.bb` not allow empty" {
+		if err.Error() != "`.b.bb` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -239,7 +238,7 @@ func TestValidate_slice(t *testing.T) {
 		{},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.0.A.AA` not allow empty" {
+		if err.Error() != "`.0.A.AA` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -247,7 +246,7 @@ func TestValidate_slice(t *testing.T) {
 		A: struct{ AA string }{AA: "a"},
 	}}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.0.B` not allow empty" {
+		if err.Error() != "`.0.B` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -256,7 +255,7 @@ func TestValidate_slice(t *testing.T) {
 		B: &struct{ BB *int }{},
 	}}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.0.B.BB` not allow empty" {
+		if err.Error() != "`.0.B.BB` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -275,7 +274,7 @@ func TestValidate_map(t *testing.T) {
 		"hello": {},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.hello.A.AA` not allow empty" {
+		if err.Error() != "`.hello.A.AA` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -285,7 +284,7 @@ func TestValidate_map(t *testing.T) {
 		},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.hello.B` not allow empty" {
+		if err.Error() != "`.hello.B` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -296,7 +295,7 @@ func TestValidate_map(t *testing.T) {
 		},
 	}
 	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "[invalid-data] `.hello.B.BB` not allow empty" {
+		if err.Error() != "`.hello.B.BB` not allow empty" {
 			t.Fatal(err)
 		}
 	}
@@ -345,8 +344,7 @@ func TestValidate_outerrule(t *testing.T) {
 		".B":    func(val any) error { return errors.New("hello world") },
 	}
 	if err := validator.Validate(r, rules); err != nil {
-		_, msg := errors.Parse(err)
-		if msg != "hello world" {
+		if err.Error() != "hello world" {
 			t.Fatal(err)
 		}
 	}

@@ -15,7 +15,7 @@ func TestI18n(t *testing.T) {
 		".min": "min:5",
 	})
 	errm := err.Error()
-	if err != nil && errm == "[invalid-data] `.min` 应该大于等于[5]，当前值为[2]" {
+	if err != nil && errm == "`.min` 应该大于等于[5]，当前值为[2]" {
 		return
 	}
 	t.Fatal("translate failed")

@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dev-mockingbird/errors"
 	"github.com/dev-mockingbird/logf"
 	"github.com/spf13/cast"
 	"github.com/thoas/go-funk"
@@ -22,7 +21,7 @@ type ValidateError struct {
 }
 
 func (v ValidateError) Error() string {
-	return fmt.Sprintf("[invalid-data] `%s` %s", strings.Join(v.Fields, ","), v.Message)
+	return fmt.Sprintf("`%s` %s", strings.Join(v.Fields, ","), v.Message)
 }
 
 type Rule struct {
@@ -44,15 +43,14 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 		if !r.Omitempty && empty {
 			err = ValidateError{
 				Fields:  []string{prev},
-				Message: r.validator.printer.Sprintf("not allow empty")}
+				Message: r.validator.printer.Sprintf("not allow empty"),
+			}
 			return true
 		}
 		return false
 	}
 	if r.Callback != nil {
-		if err = r.Callback(val.Interface()); err != nil {
-			err = errors.Tag(err, InvalidData)
-		}
+		err = r.Callback(val.Interface())
 		return
 	}
 	switch val.Type().Kind() {
