@@ -11,10 +11,6 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-const (
-	InvalidData = "invalid-data"
-)
-
 type ValidateError struct {
 	Fields  []string `json:"fields"`
 	Message string   `json:"message"`
@@ -23,6 +19,8 @@ type ValidateError struct {
 func (v ValidateError) Error() string {
 	return fmt.Sprintf("`%s` %s", strings.Join(v.Fields, ","), v.Message)
 }
+
+var _ error = &ValidateError{}
 
 type Rule struct {
 	IsA       []string
@@ -38,10 +36,10 @@ type Rule struct {
 
 type Rules map[string]any
 
-func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
+func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err *ValidateError) {
 	assertEmpty := func() bool {
 		if !r.Omitempty && empty {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("not allow empty"),
 			}
@@ -50,7 +48,13 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 		return false
 	}
 	if r.Callback != nil {
-		err = r.Callback(val.Interface())
+		er := r.Callback(val.Interface())
+		if err != nil {
+			err = &ValidateError{
+				Fields:  []string{prev},
+				Message: er.Error(),
+			}
+		}
 		return
 	}
 	switch val.Type().Kind() {
@@ -84,7 +88,7 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 			}
 			if found {
-				err = ValidateError{
+				err = &ValidateError{
 					Fields:  []string{prev},
 					Message: r.validator.printer.Sprintf("is not a %s", strings.Join(r.IsA, ",")),
 				}
@@ -93,13 +97,11 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 			r.validator.logger.Logf(logf.Warn, "not found [is a] definition for [%s]", r.IsA)
 		}
 		if r.Regexp != "" {
-			var re *regexp.Regexp
-			if re, err = regexp.Compile(r.Regexp); err != nil {
+			if re, e := regexp.Compile(r.Regexp); e != nil {
 				r.validator.logger.Logf(logf.Warn, "compile regexp for `%s` failed: %s", prev, err.Error())
-				return
-			}
-			if !re.MatchString(sval) {
-				err = ValidateError{
+				err = &ValidateError{Fields: []string{prev}, Message: r.validator.printer.Sprintf("can't compile regexp: %s", err.Error())}
+			} else if !re.MatchString(sval) {
+				err = &ValidateError{
 					Fields:  []string{prev},
 					Message: r.validator.printer.Sprintf("cound be malformed"),
 				}
@@ -107,19 +109,19 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 			}
 		}
 		if len(r.Enum) > 0 && !funk.ContainsString(r.Enum, sval) {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("should be one of [%s], current value is [%s]", strings.Join(r.Enum, ","), sval),
 			}
 			return
 		} else if r.Min != nil && len(sval) < int(*r.Min) {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("has a minimum length [%d]", *r.Min),
 			}
 			return
 		} else if r.Max != nil && len(sval) > int(*r.Max) {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("has a maximum length [%d]", *r.Max),
 			}
@@ -136,20 +138,20 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err error) {
 				}
 				return ret
 			}(), ival) {
-				err = ValidateError{
+				err = &ValidateError{
 					Fields:  []string{prev},
 					Message: r.validator.printer.Sprintf("should be one of [%s], current value is [%d]", strings.Join(r.Enum, ","), ival),
 				}
 				return
 			}
 		} else if r.Min != nil && ival < *r.Min {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("should be greater than equal [%d], current value is [%d]", *r.Min, ival),
 			}
 			return
 		} else if r.Max != nil && ival > *r.Max {
-			err = ValidateError{
+			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("should be less than equal [%d], current value is [%d]", *r.Max, ival),
 			}

@@ -22,7 +22,7 @@ const (
 )
 
 type Validator interface {
-	Validate(data any, rules ...Rules) error
+	Validate(data any, rules ...Rules) *ValidateError
 }
 
 type Validate func(data any, rules ...Rules) error
@@ -31,7 +31,7 @@ func (v Validate) Validate(data any, rules ...Rules) error {
 	return v(data, rules...)
 }
 
-func (v *validator) validate(data any, prev string) error {
+func (v *validator) validate(data any, prev string) *ValidateError {
 	val := reflect.ValueOf(data)
 	return v.validateReflectValue(val, prev)
 }
@@ -100,7 +100,7 @@ func (validator *validator) getRule(name, rawrule string) (rule Rule) {
 	return rule
 }
 
-func (validator *validator) validateReflectValue(val reflect.Value, prev string) error {
+func (validator *validator) validateReflectValue(val reflect.Value, prev string) *ValidateError {
 	for val.Type().Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
@@ -163,7 +163,7 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			}
 		}
 		if !found {
-			return ValidateError{
+			return &ValidateError{
 				Fields:  fields,
 				Message: validator.printer.Sprintf("at least one of [%s] should be valued", strings.Join(fields, ",")),
 			}
@@ -244,7 +244,7 @@ func Printer(printer *message.Printer) Option {
 	}
 }
 
-func (v *validator) Validate(data any, rules ...Rules) error {
+func (v *validator) Validate(data any, rules ...Rules) *ValidateError {
 	if len(rules) > 0 {
 		v = v.With(rules...)
 	}
