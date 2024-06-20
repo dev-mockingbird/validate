@@ -3,6 +3,8 @@ package validate
 import (
 	"errors"
 	"testing"
+
+	"github.com/tj/assert"
 )
 
 type SimpleValidateCase struct {
@@ -237,68 +239,67 @@ func TestValidate_slice(t *testing.T) {
 	r := []NestedCase{
 		{},
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.0.A.AA` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err := GetValidator().Validate(r)
+
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.A.AA"}, err.Fields, "fileds should be .0.A.AA")
+
 	r = []NestedCase{{
 		A: struct{ AA string }{AA: "a"},
 	}}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.0.B` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err = GetValidator().Validate(r)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.B"}, err.Fields, "fileds should be .0.B")
+
 	r = []NestedCase{{
 		A: struct{ AA string }{AA: "a"},
 		B: &struct{ BB *int }{},
 	}}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.0.B.BB` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err = GetValidator().Validate(r)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.B.BB"}, err.Fields, "fileds should be .0.B.BB")
+
 	b := 0
 	r = []NestedCase{{
 		A: struct{ AA string }{AA: "a"},
 		B: &struct{ BB *int }{BB: &b},
 	}}
-	if err := GetValidator().Validate(r); err != nil {
-		t.Fatal(err)
-	}
+	err = GetValidator().Validate(r)
+	assert.Nil(t, err, "err should be nil")
 }
 
 func TestValidate_map(t *testing.T) {
 	r := map[string]NestedCase{
 		"hello": {},
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.hello.A.AA` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err := GetValidator().Validate(r)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.A.AA"}, err.Fields, "fileds should be .hello.A.AA")
+
 	r = map[string]NestedCase{
 		"hello": {
 			A: struct{ AA string }{AA: "a"},
 		},
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.hello.B` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err = GetValidator().Validate(r)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.B"}, err.Fields, "fileds should be .hello.B")
+
 	r = map[string]NestedCase{
 		"hello": {
 			A: struct{ AA string }{AA: "a"},
 			B: &struct{ BB *int }{},
 		},
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.hello.B.BB` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err = GetValidator().Validate(r)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.B.BB"}, err.Fields, "fileds should be .hello.B.BB")
 	b := 0
 	r = map[string]NestedCase{
 		"hello": {
@@ -306,9 +307,8 @@ func TestValidate_map(t *testing.T) {
 			B: &struct{ BB *int }{BB: &b},
 		},
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		t.Fatal(err)
-	}
+	err = GetValidator().Validate(r)
+	assert.Nil(t, err, "err should be nil")
 }
 
 func TestValidate_rules(t *testing.T) {
@@ -321,9 +321,8 @@ func TestValidate_rules(t *testing.T) {
 			B: &struct{ BB *int }{},
 		},
 	}
-	if err := validator.Validate(r); err != nil {
-		t.Fatal(err)
-	}
+	err := validator.Validate(r)
+	assert.Nil(t, err, "err should be nil")
 }
 
 func TestValidate_unexported(t *testing.T) {
@@ -331,9 +330,8 @@ func TestValidate_unexported(t *testing.T) {
 	r := map[string]UnexportedCase{
 		"hello": {},
 	}
-	if err := validator.Validate(r); err != nil {
-		t.Fatal(err)
-	}
+	err := validator.Validate(r)
+	assert.Nil(t, err, "err should be nil")
 }
 
 func TestValidate_outerrule(t *testing.T) {
@@ -343,11 +341,10 @@ func TestValidate_outerrule(t *testing.T) {
 		".A.AA": "omitempty",
 		".B":    func(val any) error { return errors.New("hello world") },
 	}
-	if err := validator.Validate(r, rules); err != nil {
-		if err.Error() != "hello world" {
-			t.Fatal(err)
-		}
-	}
+	err := validator.Validate(r, rules, rules)
+	assert.NotNil(t, err, "err should not be nil")
+	assert.Equal(t, "hello world", err.Message, "message should be hello world")
+	assert.Equal(t, []string{".B"}, err.Fields, "fileds should be .B")
 }
 
 func TestValidate_IsA(t *testing.T) {
@@ -357,7 +354,12 @@ func TestValidate_IsA(t *testing.T) {
 	}, Rules{
 		".password": "is:password",
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err, "err should be nil")
+	err = validator.Validate(map[string]string{
+		"password": "123456789",
+	}, Rules{
+		".password": "is:password",
+	})
+	assert.Equal(t, "is not one of the [password]", err.Message, "message not correct")
+	assert.Equal(t, []string{".password"}, err.Fields, "fields should be .password")
 }

@@ -165,7 +165,7 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 		if !found {
 			return &ValidateError{
 				Fields:  fields,
-				Message: validator.printer.Sprintf("at least one of [%s] should be valued", strings.Join(fields, ",")),
+				Message: validator.printer.Sprintf("at least one of the fields should be valued"),
 			}
 		}
 	}

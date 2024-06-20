@@ -49,7 +49,7 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err *Validat
 	}
 	if r.Callback != nil {
 		er := r.Callback(val.Interface())
-		if err != nil {
+		if er != nil {
 			err = &ValidateError{
 				Fields:  []string{prev},
 				Message: er.Error(),
@@ -90,7 +90,7 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, err *Validat
 			if found {
 				err = &ValidateError{
 					Fields:  []string{prev},
-					Message: r.validator.printer.Sprintf("is not a %s", strings.Join(r.IsA, ",")),
+					Message: r.validator.printer.Sprintf("is not one of the [%s]", strings.Join(r.IsA, ",")),
 				}
 				return
 			}
