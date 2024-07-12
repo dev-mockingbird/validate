@@ -22,7 +22,7 @@ const (
 )
 
 type Validator interface {
-	Validate(data any, rules ...Rules) *ValidateError
+	Validate(data any, rules ...Rules) ValidateErrors
 }
 
 type Validate func(data any, rules ...Rules) error
@@ -31,7 +31,7 @@ func (v Validate) Validate(data any, rules ...Rules) error {
 	return v(data, rules...)
 }
 
-func (v *validator) validate(data any, prev string) *ValidateError {
+func (v *validator) validate(data any, prev string) ValidateErrors {
 	val := reflect.ValueOf(data)
 	return v.validateReflectValue(val, prev)
 }
@@ -100,7 +100,7 @@ func (validator *validator) getRule(name, rawrule string) (rule Rule) {
 	return rule
 }
 
-func (validator *validator) validateReflectValue(val reflect.Value, prev string) *ValidateError {
+func (validator *validator) validateReflectValue(val reflect.Value, prev string) (errs ValidateErrors) {
 	for val.Type().Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
@@ -127,7 +127,8 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			rule := validator.getRule(fn, rawrule)
 			empty, err := rule.Validate(val.Field(i), fn)
 			if err != nil {
-				return err
+				errs = append(errs, err...)
+				continue
 			}
 			for _, k := range rule.Must {
 				must[k] = append(must[k], fn)
@@ -140,7 +141,8 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			v := val.Index(i)
 			empty, err := validator.getRule(k, "").Validate(v, k)
 			if err != nil {
-				return err
+				errs = append(errs, err...)
+				continue
 			}
 			emptyes[k] = empty
 		}
@@ -150,7 +152,8 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			v := val.MapIndex(key)
 			empty, err := validator.getRule(k, "").Validate(v, k)
 			if err != nil {
-				return err
+				errs = append(errs, err...)
+				continue
 			}
 			emptyes[k] = empty
 		}
@@ -163,13 +166,13 @@ func (validator *validator) validateReflectValue(val reflect.Value, prev string)
 			}
 		}
 		if !found {
-			return &ValidateError{
+			errs = append(errs, ValidateError{
 				Fields:  fields,
 				Message: validator.printer.Sprintf("at least one of the fields should be valued"),
-			}
+			})
 		}
 	}
-	return nil
+	return
 }
 
 type validator struct {
@@ -244,7 +247,7 @@ func Printer(printer *message.Printer) Option {
 	}
 }
 
-func (v *validator) Validate(data any, rules ...Rules) *ValidateError {
+func (v *validator) Validate(data any, rules ...Rules) ValidateErrors {
 	if len(rules) > 0 {
 		v = v.With(rules...)
 	}

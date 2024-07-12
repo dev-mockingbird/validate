@@ -63,20 +63,21 @@ func TestValidate_complex(t *testing.T) {
 
 func TestValidate_simple(t *testing.T) {
 	r := SimpleValidateCase{}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.PtrIntId` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err := GetValidator().Validate(r)
+	assert.True(t, len(err) == 2)
+	assert.Equal(t, "not allow empty", err[0].Message)
+	assert.Equal(t, []string{".PtrIntId"}, err[0].Fields)
+	assert.Equal(t, "not allow empty", err[1].Message)
+	assert.Equal(t, []string{".Str"}, err[1].Fields)
+
 	var i int = 0
 	r = SimpleValidateCase{
 		PtrIntId: &i,
 	}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.Str` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err = GetValidator().Validate(r)
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "not allow empty", err[0].Message)
+	assert.Equal(t, []string{".Str"}, err[0].Fields)
 }
 
 func TestValidate_regexp(t *testing.T) {
@@ -169,11 +170,12 @@ func TestValidate_minmax(t *testing.T) {
 
 func TestValidate_nested(t *testing.T) {
 	r := NestedCase{}
-	if err := GetValidator().Validate(r); err != nil {
-		if err.Error() != "`.A.AA` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err := GetValidator().Validate(r)
+	assert.True(t, len(err) == 2)
+	assert.Equal(t, "not allow empty", err[0].Message)
+	assert.Equal(t, []string{".A.AA"}, err[0].Fields)
+	assert.Equal(t, "not allow empty", err[1].Message)
+	assert.Equal(t, []string{".B"}, err[1].Fields)
 	r = NestedCase{
 		A: struct{ AA string }{AA: "a"},
 	}
@@ -203,11 +205,12 @@ func TestValidate_nested(t *testing.T) {
 
 func TestValidate_snakecase(t *testing.T) {
 	r := NestedCase{}
-	if err := GetValidator(NameCase(SnakeCase)).Validate(r); err != nil {
-		if err.Error() != "`.a.aa` not allow empty" {
-			t.Fatal(err)
-		}
-	}
+	err := GetValidator(NameCase(SnakeCase)).Validate(r)
+	assert.True(t, len(err) == 2)
+	assert.Equal(t, "not allow empty", err[0].Message)
+	assert.Equal(t, []string{".a.aa"}, err[0].Fields)
+	assert.Equal(t, "not allow empty", err[1].Message)
+	assert.Equal(t, []string{".b"}, err[1].Fields)
 	r = NestedCase{
 		A: struct{ AA string }{AA: "a"},
 	}
@@ -240,27 +243,29 @@ func TestValidate_slice(t *testing.T) {
 		{},
 	}
 	err := GetValidator().Validate(r)
-
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".0.A.AA"}, err.Fields, "fileds should be .0.A.AA")
+	t.Logf("err: %s", err.Error())
+	assert.True(t, len(err) == 2)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.A.AA"}, err[0].Fields, "fileds should be .0.A.AA")
+	assert.Equal(t, "not allow empty", err[1].Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.B"}, err[1].Fields, "fileds should be .0.B")
 
 	r = []NestedCase{{
 		A: struct{ AA string }{AA: "a"},
 	}}
 	err = GetValidator().Validate(r)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".0.B"}, err.Fields, "fileds should be .0.B")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.B"}, err[0].Fields, "fileds should be .0.B")
 
 	r = []NestedCase{{
 		A: struct{ AA string }{AA: "a"},
 		B: &struct{ BB *int }{},
 	}}
 	err = GetValidator().Validate(r)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".0.B.BB"}, err.Fields, "fileds should be .0.B.BB")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".0.B.BB"}, err[0].Fields, "fileds should be .0.B.BB")
 
 	b := 0
 	r = []NestedCase{{
@@ -276,9 +281,12 @@ func TestValidate_map(t *testing.T) {
 		"hello": {},
 	}
 	err := GetValidator().Validate(r)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".hello.A.AA"}, err.Fields, "fileds should be .hello.A.AA")
+	t.Logf("err: %s", err.Error())
+	assert.True(t, len(err) == 2)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.A.AA"}, err[0].Fields, "fileds should be .hello.A.AA")
+	assert.Equal(t, "not allow empty", err[1].Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.B"}, err[1].Fields, "fileds should be .hello.A.AA")
 
 	r = map[string]NestedCase{
 		"hello": {
@@ -286,9 +294,9 @@ func TestValidate_map(t *testing.T) {
 		},
 	}
 	err = GetValidator().Validate(r)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".hello.B"}, err.Fields, "fileds should be .hello.B")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.B"}, err[0].Fields, "fileds should be .hello.B")
 
 	r = map[string]NestedCase{
 		"hello": {
@@ -297,9 +305,9 @@ func TestValidate_map(t *testing.T) {
 		},
 	}
 	err = GetValidator().Validate(r)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "not allow empty", err.Message, "message should not allow empty")
-	assert.Equal(t, []string{".hello.B.BB"}, err.Fields, "fileds should be .hello.B.BB")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "not allow empty", err[0].Message, "message should not allow empty")
+	assert.Equal(t, []string{".hello.B.BB"}, err[0].Fields, "fileds should be .hello.B.BB")
 	b := 0
 	r = map[string]NestedCase{
 		"hello": {
@@ -342,9 +350,9 @@ func TestValidate_outerrule(t *testing.T) {
 		".B":    func(val any) error { return errors.New("hello world") },
 	}
 	err := validator.Validate(r, rules, rules)
-	assert.NotNil(t, err, "err should not be nil")
-	assert.Equal(t, "hello world", err.Message, "message should be hello world")
-	assert.Equal(t, []string{".B"}, err.Fields, "fileds should be .B")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "hello world", err[0].Message, "message should be hello world")
+	assert.Equal(t, []string{".B"}, err[0].Fields, "fileds should be .B")
 }
 
 func TestValidate_IsA(t *testing.T) {
@@ -360,6 +368,7 @@ func TestValidate_IsA(t *testing.T) {
 	}, Rules{
 		".password": "is:password",
 	})
-	assert.Equal(t, "is not one of the [password]", err.Message, "message not correct")
-	assert.Equal(t, []string{".password"}, err.Fields, "fields should be .password")
+	assert.True(t, len(err) == 1)
+	assert.Equal(t, "is not one of the [password]", err[0].Message, "message not correct")
+	assert.Equal(t, []string{".password"}, err[0].Fields, "fields should be .password")
 }
