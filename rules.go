@@ -136,8 +136,7 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, errs Validat
 			})
 			return
 		}
-	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		ival := val.Int()
 		if len(r.Enum) > 0 {
 			if !funk.ContainsInt64(func() []int64 {
@@ -163,6 +162,36 @@ func (r Rule) Validate(val reflect.Value, prev string) (empty bool, errs Validat
 			errs = append(errs, ValidateError{
 				Fields:  []string{prev},
 				Message: r.validator.printer.Sprintf("should be less than equal [%d], current value is [%d]", *r.Max, ival),
+			})
+			return
+		}
+	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		uval := val.Uint()
+		ival := int64(uval)
+		if len(r.Enum) > 0 {
+			if !funk.ContainsInt64(func() []int64 {
+				ret := make([]int64, len(r.Enum))
+				for i, e := range r.Enum {
+					ret[i] = cast.ToInt64(e)
+				}
+				return ret
+			}(), ival) {
+				errs = append(errs, ValidateError{
+					Fields:  []string{prev},
+					Message: r.validator.printer.Sprintf("should be one of [%s], current value is [%d]", strings.Join(r.Enum, ","), uval),
+				})
+				return
+			}
+		} else if r.Min != nil && ival < *r.Min {
+			errs = append(errs, ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("should be greater than equal [%d], current value is [%d]", *r.Min, uval),
+			})
+			return
+		} else if r.Max != nil && ival > *r.Max {
+			errs = append(errs, ValidateError{
+				Fields:  []string{prev},
+				Message: r.validator.printer.Sprintf("should be less than equal [%d], current value is [%d]", *r.Max, uval),
 			})
 			return
 		}
